@@ -1,413 +1,616 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unused Code Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Unused Code Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-            --border: #e2e8f0;
-        }
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
         .container {
-            max_width: 1400px;
+            max-width: 1400px;
             margin: 0 auto;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
         }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
         }
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
             border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+            border-color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
         .stat-value {
             font-size: 2.5rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--text-primary);
         }
-        .stat-label {
-            color: #64748b;
-            font-size: 0.9rem;
-            font-weight: 500;
+
+        .stat-sublabel {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
         }
+
         .charts-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
         }
-        .chart-container {
-            height: 400px;
-            position: relative;
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border);
         }
-        .tabs {
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .details-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
         }
-        .tab {
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            color: #64748b;
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
         }
-        .tab.active {
+
+        .section-count {
             background: var(--primary);
             color: white;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-        }
-        th, td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-        th {
-            background: #f1f5f9;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
             font-weight: 600;
-            color: #475569;
-            position: sticky;
-            top: 0;
         }
-        tr:hover {
-            background: #f8fafc;
+
+        .items-grid {
+            display: grid;
+            gap: 0.75rem;
         }
-        .search-bar {
-            width: 100%;
-            padding: 12px;
+
+        .item-card {
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 1rem;
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
         }
-        .copy-btn {
-            background: #e2e8f0;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
+
+        .item-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            transform: translateX(4px);
         }
-        .copy-btn:hover {
-            background: #cbd5e1;
+
+        .item-path {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            flex: 1;
         }
-        .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+
+        .item-loc {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
             font-weight: 600;
+            margin-left: 1rem;
         }
-        .badge-component { background: #dbeafe; color: #1e40af; }
-        .badge-helper { background: #dcfce7; color: #166534; }
-        .badge-hook { background: #f3e8ff; color: #6b21a8; }
-        .badge-type { background: #ffedd5; color: #9a3412; }
-        .badge-asset { background: #fee2e2; color: #991b1b; }
+
+        .sub-items {
+            margin-left: 2rem;
+            margin-top: 0.5rem;
+            padding-left: 1rem;
+            border-left: 2px solid var(--border);
+        }
+
+        .sub-item {
+            padding: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .item-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .item-loc {
+                margin-left: 0;
+            }
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .filter-tab:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .filter-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Unused Code Dashboard</h1>
-            <div style="color: #64748b;">Generated: 2025-12-10 18:43</div>
-        </div>
+        <header>
+            <h1>📊 Unused Code Analysis</h1>
+            <p class="subtitle">Generated on December 15, 2025</p>
+        </header>
 
         <div class="stats-grid">
-            <div class="card">
-                <div class="stat-value" id="totalItems">0</div>
-                <div class="stat-label">Total Unused Items</div>
+            <div class="stat-card">
+                <div class="stat-label">Total Items</div>
+                <div class="stat-value">83</div>
+                <div class="stat-sublabel">Unused code items found</div>
             </div>
-            <div class="card">
-                <div class="stat-value" id="totalLoc">0</div>
-                <div class="stat-label">Est. Lines of Code Saved</div>
+            <div class="stat-card">
+                <div class="stat-label">Lines of Code</div>
+                <div class="stat-value">~2,500</div>
+                <div class="stat-sublabel">LOC that can be removed</div>
             </div>
-            <div class="card">
-                <div class="stat-value" id="totalModules">0</div>
-                <div class="stat-label">Impacted Modules/Files</div>
+            <div class="stat-card">
+                <div class="stat-label">Components</div>
+                <div class="stat-value">10</div>
+                <div class="stat-sublabel">2 atoms + 5 skeletons + 3 organisms</div>
             </div>
-        </div>
-
-        <div class="charts-grid">
-            <div class="card">
-                <h3>Breakdown by Category</h3>
-                <div class="chart-container">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-            <div class="card">
-                <h3>Unused Items by Module / Source File</h3>
-                <div class="chart-container">
-                    <canvas id="moduleChart"></canvas>
-                </div>
+            <div class="stat-card">
+                <div class="stat-label">Templates</div>
+                <div class="stat-value">10</div>
+                <div class="stat-sublabel">Unused templates</div>
             </div>
         </div>
 
         <div class="charts-grid">
-            <div class="card">
-                <h3>Module Profile (Top 5)</h3>
-                <p style="font-size: 0.8rem; color: #64748b;">Comparing composition of unused items</p>
-                <div class="chart-container">
-                    <canvas id="radarChart"></canvas>
-                </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Distribution by Category</h3>
+                <canvas id="categoryChart"></canvas>
             </div>
-            <div class="card">
-                <h3>Impact Analysis</h3>
-                <p style="font-size: 0.8rem; color: #64748b;">LOC Saved vs. Number of Items</p>
-                <div class="chart-container">
-                    <canvas id="scatterChart"></canvas>
-                </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Lines of Code by Category</h3>
+                <canvas id="locChart"></canvas>
             </div>
         </div>
 
-        <div class="card">
-            <div class="tabs" id="tabs">
-                <div class="tab active" onclick="filterTable('all')">All</div>
-                <div class="tab" onclick="filterTable('components')">Components</div>
-                <div class="tab" onclick="filterTable('helpers')">Helpers</div>
-                <div class="tab" onclick="filterTable('hooks')">Hooks</div>
-                <div class="tab" onclick="filterTable('types')">Types</div>
-                <div class="tab" onclick="filterTable('assets')">Assets</div>
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="showSection('all')">All</button>
+            <button class="filter-tab" onclick="showSection('components')">Components</button>
+            <button class="filter-tab" onclick="showSection('templates')">Templates</button>
+            <button class="filter-tab" onclick="showSection('hooks')">Hooks</button>
+            <button class="filter-tab" onclick="showSection('helpers')">Helpers</button>
+            <button class="filter-tab" onclick="showSection('types')">Types</button>
+            <button class="filter-tab" onclick="showSection('assets')">Assets</button>
+            <button class="filter-tab" onclick="showSection('translations')">Translations</button>
+        </div>
+
+        <div id="components-section" class="details-section">
+            <div class="section-header">
+                <h2 class="section-title">Components</h2>
+                <span class="section-count">10</span>
             </div>
+            <div class="items-grid" id="components-list"></div>
+        </div>
 
-            <input type="text" class="search-bar" placeholder="Search by name, path, or module..." onkeyup="searchTable(this.value)">
+        <div id="templates-section" class="details-section">
+            <div class="section-header">
+                <h2 class="section-title">Templates</h2>
+                <span class="section-count">10</span>
+            </div>
+            <div class="items-grid" id="templates-list"></div>
+        </div>
 
-            <div style="overflow-x: auto; max-height: 800px;">
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Name</th>
-                            <th>Module / Source File</th>
-                            <th>Full Path</th>
-                            <th>Size</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
+        <div id="hooks-section" class="details-section">
+            <div class="section-header">
+                <h2 class="section-title">Hooks</h2>
+                <span class="section-count">12</span>
+            </div>
+            <div class="items-grid" id="hooks-list"></div>
+        </div>
+
+        <div id="helpers-section" class="details-section">
+            <div class="section-header">
+                <h2 class="section-title">Helpers</h2>
+                <span class="section-count">10 files (30 items)</span>
+            </div>
+            <div class="items-grid" id="helpers-list"></div>
+        </div>
+
+        <div id="types-section" class="details-section">
+            <div class="section-header">
+                <h2 class="section-title">Types</h2>
+                <span class="section-count">21 files (74 items)</span>
+            </div>
+            <div class="items-grid" id="types-list"></div>
+        </div>
+
+        <div id="assets-section" class="details-section">
+            <div class="section-header">
+                <h2 class="section-title">Assets</h2>
+                <span class="section-count">10</span>
+            </div>
+            <div class="items-grid" id="assets-list"></div>
+        </div>
+
+        <div id="translations-section" class="details-section">
+            <div class="section-header">
+                <h2 class="section-title">Translations</h2>
+                <span class="section-count">1,070 keys</span>
+            </div>
+            <div class="items-grid">
+                <div class="item-card">
+                    <div class="item-path">English translations</div>
+                    <span class="item-loc">533 keys</span>
+                </div>
+                <div class="item-card">
+                    <div class="item-path">Arabic translations</div>
+                    <span class="item-loc">537 keys</span>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // EMBEDDED DATA START
-        const rawData = {"stats": {"total_items": 143, "total_loc_saved": 1505, "by_module": {"Listing": 17, "Common/Other": 15, "Currency": 10, "Stories": 7, "Quota": 6, "Skeletons": 5, "Generic": 5, "Portal": 5, "Stats": 5, "Transaction": 5, "Leads": 4, "Overview": 4, "General Hooks": 4, "AdProduct": 4, "Agent": 4, "CreditWallet": 4, "Team": 4, "User": 4, "Organisms": 3, "Filter": 3, "Message": 3, "TopLocations": 3, "Transactions": 2, "TruBroker": 2, "Chat": 2, "InsightsTransactions": 2, "Listings": 2, "Permission": 2, "Post": 2, "Products": 2, "Service": 2, "Atoms": 1}, "by_module_loc": {"Atoms": 19, "Organisms": 176, "Skeletons": 266, "Currency": 70, "Filter": 45, "Generic": 55, "Leads": 60, "Listing": 105, "Overview": 60, "Stories": 104, "Transactions": 30, "TruBroker": 30, "Chat": 19, "InsightsTransactions": 40, "Listings": 36, "General Hooks": 115, "AdProduct": 20, "Agent": 20, "CreditWallet": 20, "Message": 15, "Permission": 10, "Portal": 25, "Post": 10, "Products": 10, "Quota": 30, "Service": 10, "Stats": 25, "Team": 20, "TopLocations": 15, "Transaction": 25, "User": 20, "Common/Other": 0}, "module_breakdown": {"Atoms": {"Component": 1, "Helper Function": 0, "Hook": 0, "Type": 0, "Asset": 0}, "Organisms": {"Component": 3, "Helper Function": 0, "Hook": 0, "Type": 0, "Asset": 0}, "Skeletons": {"Component": 5, "Helper Function": 0, "Hook": 0, "Type": 0, "Asset": 0}, "Currency": {"Component": 0, "Helper Function": 2, "Hook": 0, "Type": 8, "Asset": 0}, "Filter": {"Component": 0, "Helper Function": 3, "Hook": 0, "Type": 0, "Asset": 0}, "Generic": {"Component": 0, "Helper Function": 3, "Hook": 0, "Type": 2, "Asset": 0}, "Leads": {"Component": 0, "Helper Function": 4, "Hook": 0, "Type": 0, "Asset": 0}, "Listing": {"Component": 0, "Helper Function": 2, "Hook": 0, "Type": 15, "Asset": 0}, "Overview": {"Component": 0, "Helper Function": 4, "Hook": 0, "Type": 0, "Asset": 0}, "Stories": {"Component": 0, "Helper Function": 6, "Hook": 1, "Type": 0, "Asset": 0}, "Transactions": {"Component": 0, "Helper Function": 2, "Hook": 0, "Type": 0, "Asset": 0}, "TruBroker": {"Component": 0, "Helper Function": 2, "Hook": 0, "Type": 0, "Asset": 0}, "Chat": {"Component": 0, "Helper Function": 0, "Hook": 2, "Type": 0, "Asset": 0}, "InsightsTransactions": {"Component": 0, "Helper Function": 0, "Hook": 2, "Type": 0, "Asset": 0}, "Listings": {"Component": 0, "Helper Function": 0, "Hook": 2, "Type": 0, "Asset": 0}, "General Hooks": {"Component": 0, "Helper Function": 0, "Hook": 4, "Type": 0, "Asset": 0}, "AdProduct": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 4, "Asset": 0}, "Agent": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 4, "Asset": 0}, "CreditWallet": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 4, "Asset": 0}, "Message": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 3, "Asset": 0}, "Permission": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 2, "Asset": 0}, "Portal": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 5, "Asset": 0}, "Post": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 2, "Asset": 0}, "Products": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 2, "Asset": 0}, "Quota": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 6, "Asset": 0}, "Service": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 2, "Asset": 0}, "Stats": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 5, "Asset": 0}, "Team": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 4, "Asset": 0}, "TopLocations": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 3, "Asset": 0}, "Transaction": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 5, "Asset": 0}, "User": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 4, "Asset": 0}, "Common/Other": {"Component": 0, "Helper Function": 0, "Hook": 0, "Type": 0, "Asset": 15}}}, "data": {"components": [{"name": "Link.tsx", "path": "components/atoms/Link.tsx", "module": "Atoms", "loc": 19, "type": "Component"}, {"name": "ContactDetails.tsx", "path": "components/organisms/ContactDetails.tsx", "module": "Organisms", "loc": 69, "type": "Component"}, {"name": "CreditsUsageSummaryBottomSheet.tsx", "path": "components/organisms/CreditsUsageSummaryBottomSheet.tsx", "module": "Organisms", "loc": 77, "type": "Component"}, {"name": "PhoneCallTypesList.tsx", "path": "components/organisms/PhoneCallTypesList.tsx", "module": "Organisms", "loc": 30, "type": "Component"}, {"name": "AdProductFilterSkeleton.tsx", "path": "components/skeletons/AdProductFilterSkeleton.tsx", "module": "Skeletons", "loc": 33, "type": "Component"}, {"name": "CreditWalletsSkeleton.tsx", "path": "components/skeletons/CreditWalletsSkeleton.tsx", "module": "Skeletons", "loc": 17, "type": "Component"}, {"name": "DevConnectCardSkeleton.tsx", "path": "components/skeletons/DevConnectCardSkeleton.tsx", "module": "Skeletons", "loc": 62, "type": "Component"}, {"name": "ProfileSkeleton.tsx", "path": "components/skeletons/ProfileSkeleton.tsx", "module": "Skeletons", "loc": 113, "type": "Component"}, {"name": "TruEstimateSkeleton.tsx", "path": "components/skeletons/TruEstimateSkeleton.tsx", "module": "Skeletons", "loc": 41, "type": "Component"}], "helpers": [{"name": "currencyBasedOnPortalType", "path": "utils/helpers/Currency.ts", "module": "Currency", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Currency.ts", "module": "Currency", "loc": 15, "type": "Helper Function"}, {"name": "listData", "path": "utils/helpers/Filter.ts", "module": "Filter", "loc": 15, "type": "Helper Function"}, {"name": "resetPropertyValues", "path": "utils/helpers/Filter.ts", "module": "Filter", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Filter.ts", "module": "Filter", "loc": 15, "type": "Helper Function"}, {"name": "copySecureStoreToAsyncStore", "path": "utils/helpers/Generic.ts", "module": "Generic", "loc": 15, "type": "Helper Function"}, {"name": "roundOffValue", "path": "utils/helpers/Generic.ts", "module": "Generic", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Generic.ts", "module": "Generic", "loc": 15, "type": "Helper Function"}, {"name": "getLocalLeadAttribute", "path": "utils/helpers/Leads.ts", "module": "Leads", "loc": 15, "type": "Helper Function"}, {"name": "getMissedCallParams", "path": "utils/helpers/Leads.ts", "module": "Leads", "loc": 15, "type": "Helper Function"}, {"name": "getSavedLocalLeads", "path": "utils/helpers/Leads.ts", "module": "Leads", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Leads.ts", "module": "Leads", "loc": 15, "type": "Helper Function"}, {"name": "roundToNext15Minutes", "path": "utils/helpers/Listing.ts", "module": "Listing", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Listing.ts", "module": "Listing", "loc": 15, "type": "Helper Function"}, {"name": "getOnboardingContent", "path": "utils/helpers/Overview.ts", "module": "Overview", "loc": 15, "type": "Helper Function"}, {"name": "getPurposeFilterParams", "path": "utils/helpers/Overview.ts", "module": "Overview", "loc": 15, "type": "Helper Function"}, {"name": "getValidationFilterParams", "path": "utils/helpers/Overview.ts", "module": "Overview", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Overview.ts", "module": "Overview", "loc": 15, "type": "Helper Function"}, {"name": "Metrics", "path": "utils/helpers/Stories.ts", "module": "Stories", "loc": 15, "type": "Helper Function"}, {"name": "downloadRemoteMediaToCache", "path": "utils/helpers/Stories.ts", "module": "Stories", "loc": 15, "type": "Helper Function"}, {"name": "getLocalStoryData", "path": "utils/helpers/Stories.ts", "module": "Stories", "loc": 15, "type": "Helper Function"}, {"name": "moderateVerticalScale", "path": "utils/helpers/Stories.ts", "module": "Stories", "loc": 15, "type": "Helper Function"}, {"name": "saveLocalStoryData", "path": "utils/helpers/Stories.ts", "module": "Stories", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Stories.ts", "module": "Stories", "loc": 15, "type": "Helper Function"}, {"name": "getBedsChips", "path": "utils/helpers/Transactions.ts", "module": "Transactions", "loc": 15, "type": "Helper Function"}, {"name": "", "path": "utils/helpers/Transactions.ts", "module": "Transactions", "loc": 15, "type": "Helper Function"}, {"name": "truBrokerBuyPurposeOnlyTypes", "path": "utils/helpers/TruBroker.ts", "module": "TruBroker", "loc": 15, "type": "Helper Function"}, {"name": "truBrokerOtherPurposesOnlyTypes", "path": "utils/helpers/TruBroker.ts", "module": "TruBroker", "loc": 15, "type": "Helper Function"}], "hooks": [{"name": "useChatConversationIDs", "path": "hooks/Chat/conversation/useChatConversationIDs.ts", "module": "Chat", "loc": 7, "type": "Hook"}, {"name": "useFetchChatAccount", "path": "hooks/Chat/useFetchChatAccount.ts", "module": "Chat", "loc": 12, "type": "Hook"}, {"name": "useInsightTransactions", "path": "hooks/InsightsTransactions/useInsightTransactions.ts", "module": "InsightsTransactions", "loc": 27, "type": "Hook"}, {"name": "useTransactionType", "path": "hooks/InsightsTransactions/useTransactionType.ts", "module": "InsightsTransactions", "loc": 13, "type": "Hook"}, {"name": "useIsListingAutoTruChecked", "path": "hooks/Listings/useIsListingAutoTruChecked.ts", "module": "Listings", "loc": 17, "type": "Hook"}, {"name": "useSelectedPropertyType", "path": "hooks/Listings/useSelectedPropertyType.ts", "module": "Listings", "loc": 19, "type": "Hook"}, {"name": "useFetchStory", "path": "hooks/Stories/useFetchStory.ts", "module": "Stories", "loc": 14, "type": "Hook"}, {"name": "useAgencies", "path": "hooks/useAgencies.ts", "module": "General Hooks", "loc": 14, "type": "Hook"}, {"name": "useEventRsvpSubmit", "path": "hooks/useEventRsvpSubmit.ts", "module": "General Hooks", "loc": 46, "type": "Hook"}, {"name": "useIsAgencyExternal", "path": "hooks/useIsAgencyExternal.ts", "module": "General Hooks", "loc": 11, "type": "Hook"}, {"name": "useSwipeGesture", "path": "hooks/useSwipeGesture.ts", "module": "General Hooks", "loc": 44, "type": "Hook"}], "types": [{"name": "AdProductsType", "path": "types/AdProduct.ts", "module": "AdProduct", "loc": 5, "type": "Type"}, {"name": "CurrencyAdProductsType", "path": "types/AdProduct.ts", "module": "AdProduct", "loc": 5, "type": "Type"}, {"name": "ModifiedAdProduct", "path": "types/AdProduct.ts", "module": "AdProduct", "loc": 5, "type": "Type"}, {"name": "", "path": "types/AdProduct.ts", "module": "AdProduct", "loc": 5, "type": "Type"}, {"name": "FetchUsersFilters", "path": "types/Agent.ts", "module": "Agent", "loc": 5, "type": "Type"}, {"name": "ProfileStatuses", "path": "types/Agent.ts", "module": "Agent", "loc": 5, "type": "Type"}, {"name": "externalAgency", "path": "types/Agent.ts", "module": "Agent", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Agent.ts", "module": "Agent", "loc": 5, "type": "Type"}, {"name": "EditWalletApiMappedCurrencyObject", "path": "types/CreditWallet.ts", "module": "CreditWallet", "loc": 5, "type": "Type"}, {"name": "EditWalletDrawerData", "path": "types/CreditWallet.ts", "module": "CreditWallet", "loc": 5, "type": "Type"}, {"name": "EditWalletFormValues", "path": "types/CreditWallet.ts", "module": "CreditWallet", "loc": 5, "type": "Type"}, {"name": "", "path": "types/CreditWallet.ts", "module": "CreditWallet", "loc": 5, "type": "Type"}, {"name": "CreditAggregatesByPortalType", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "CreditConsumptionFilters", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "CreditTypes", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "CreditsConsumptionLogResponse", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "CurrencyAggregatesResponseBody", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "orionNestedFiltersType", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "useCreditConsumptionProps", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Currency.ts", "module": "Currency", "loc": 5, "type": "Type"}, {"name": "ReactQueryLoadingStates", "path": "types/Generic.ts", "module": "Generic", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Generic.ts", "module": "Generic", "loc": 5, "type": "Type"}, {"name": "Breadcrumb", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "ListingActionClickHandler", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "ListingItem", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "ListingPerformanceByDayES", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "ListingsBreakdownResponseBody", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "PermitNumberResponseBody", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "PermitNumberStatus", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "RenderActionsType", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "TabsType", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "TitleSlug", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "TruCheckAccepted", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "TruCheckPending", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "UsedAdProductsEntity", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "ValidityError", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Listing.ts", "module": "Listing", "loc": 5, "type": "Type"}, {"name": "ChatState", "path": "types/Message.ts", "module": "Message", "loc": 5, "type": "Type"}, {"name": "ConversationContactDetailsVisibility", "path": "types/Message.ts", "module": "Message", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Message.ts", "module": "Message", "loc": 5, "type": "Type"}, {"name": "PermissionsResponseBody", "path": "types/Permission.ts", "module": "Permission", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Permission.ts", "module": "Permission", "loc": 5, "type": "Type"}, {"name": "PageFilterType", "path": "types/Portal.ts", "module": "Portal", "loc": 5, "type": "Type"}, {"name": "PortalResponseBody", "path": "types/Portal.ts", "module": "Portal", "loc": 5, "type": "Type"}, {"name": "PortalsType", "path": "types/Portal.ts", "module": "Portal", "loc": 5, "type": "Type"}, {"name": "TogglePortalResponse", "path": "types/Portal.ts", "module": "Portal", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Portal.ts", "module": "Portal", "loc": 5, "type": "Type"}, {"name": "MappedPostDeletionReasonsResponseBody", "path": "types/Post.ts", "module": "Post", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Post.ts", "module": "Post", "loc": 5, "type": "Type"}, {"name": "ListingProductType", "path": "types/Products.ts", "module": "Products", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Products.ts", "module": "Products", "loc": 5, "type": "Type"}, {"name": "BasicFlagsFlags", "path": "types/Quota.ts", "module": "Quota", "loc": 5, "type": "Type"}, {"name": "DeveloperFlags", "path": "types/Quota.ts", "module": "Quota", "loc": 5, "type": "Type"}, {"name": "IndividualQuotaObjectInterface", "path": "types/Quota.ts", "module": "Quota", "loc": 5, "type": "Type"}, {"name": "QuotaStatsType", "path": "types/Quota.ts", "module": "Quota", "loc": 5, "type": "Type"}, {"name": "QuotaTabelDataInterface", "path": "types/Quota.ts", "module": "Quota", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Quota.ts", "module": "Quota", "loc": 5, "type": "Type"}, {"name": "ServiceMeta", "path": "types/Service.ts", "module": "Service", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Service.ts", "module": "Service", "loc": 5, "type": "Type"}, {"name": "ByCategoryKey", "path": "types/Stats.ts", "module": "Stats", "loc": 5, "type": "Type"}, {"name": "StatsCountAggregate", "path": "types/Stats.ts", "module": "Stats", "loc": 5, "type": "Type"}, {"name": "StatsCountResponseBody", "path": "types/Stats.ts", "module": "Stats", "loc": 5, "type": "Type"}, {"name": "StatsTrend", "path": "types/Stats.ts", "module": "Stats", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Stats.ts", "module": "Stats", "loc": 5, "type": "Type"}, {"name": "AddTeamFieldValue", "path": "types/Team.ts", "module": "Team", "loc": 5, "type": "Type"}, {"name": "PostTeam", "path": "types/Team.ts", "module": "Team", "loc": 5, "type": "Type"}, {"name": "TeamTableData", "path": "types/Team.ts", "module": "Team", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Team.ts", "module": "Team", "loc": 5, "type": "Type"}, {"name": "TopLocationGraphData", "path": "types/TopLocations.ts", "module": "TopLocations", "loc": 5, "type": "Type"}, {"name": "TopLocationsTabsValues", "path": "types/TopLocations.ts", "module": "TopLocations", "loc": 5, "type": "Type"}, {"name": "", "path": "types/TopLocations.ts", "module": "TopLocations", "loc": 5, "type": "Type"}, {"name": "DldTransactionApiResponseBody", "path": "types/Transaction.ts", "module": "Transaction", "loc": 5, "type": "Type"}, {"name": "DldTransactionProperty", "path": "types/Transaction.ts", "module": "Transaction", "loc": 5, "type": "Type"}, {"name": "NotesForm", "path": "types/Transaction.ts", "module": "Transaction", "loc": 5, "type": "Type"}, {"name": "RecentTransactions", "path": "types/Transaction.ts", "module": "Transaction", "loc": 5, "type": "Type"}, {"name": "", "path": "types/Transaction.ts", "module": "Transaction", "loc": 5, "type": "Type"}, {"name": "ColumnType", "path": "types/User.ts", "module": "User", "loc": 5, "type": "Type"}, {"name": "GroupUsersfilters", "path": "types/User.ts", "module": "User", "loc": 5, "type": "Type"}, {"name": "UserRoleType", "path": "types/User.ts", "module": "User", "loc": 5, "type": "Type"}, {"name": "UsersTableRecord", "path": "types/User.ts", "module": "User", "loc": 5, "type": "Type"}], "assets": [{"name": "TikTok.svg", "path": "assets/images/common/TikTok.svg", "module": "Common/Other", "loc": 0, "size_kb": 2.58, "type": "Asset"}, {"name": "area-icon.svg", "path": "assets/images/common/area-icon.svg", "module": "Common/Other", "loc": 0, "size_kb": 0.5, "type": "Asset"}, {"name": "dubizzle-disabled-icon.svg", "path": "assets/images/common/dubizzle-disabled-icon.svg", "module": "Common/Other", "loc": 0, "size_kb": 1.29, "type": "Asset"}, {"name": "favicon.webp", "path": "assets/images/common/favicon.webp", "module": "Common/Other", "loc": 0, "size_kb": 1.48, "type": "Asset"}, {"name": "no-image-available.webp", "path": "assets/images/common/no-image-available.webp", "module": "Common/Other", "loc": 0, "size_kb": 25.09, "type": "Asset"}, {"name": "transactions-header-bg.svg", "path": "assets/images/common/transactions-header-bg.svg", "module": "Common/Other", "loc": 0, "size_kb": 3.48, "type": "Asset"}, {"name": "logo.svg", "path": "assets/images/egy/logo.svg", "module": "Common/Other", "loc": 0, "size_kb": 6.72, "type": "Asset"}, {"name": "profolio-mobile.png", "path": "assets/images/egy/profolio-mobile.png", "module": "Common/Other", "loc": 0, "size_kb": 396.47, "type": "Asset"}, {"name": "devconnect-overview-bg.webp", "path": "assets/images/uae/devconnect-overview-bg.webp", "module": "Common/Other", "loc": 0, "size_kb": 2.96, "type": "Asset"}, {"name": "electricity.svg", "path": "assets/images/uae/electricity.svg", "module": "Common/Other", "loc": 0, "size_kb": 0.46, "type": "Asset"}, {"name": "eye-disabled.svg", "path": "assets/images/uae/eye-disabled.svg", "module": "Common/Other", "loc": 0, "size_kb": 1.05, "type": "Asset"}, {"name": "eye.svg", "path": "assets/images/uae/eye.svg", "module": "Common/Other", "loc": 0, "size_kb": 0.88, "type": "Asset"}, {"name": "logo.svg", "path": "assets/images/uae/logo.svg", "module": "Common/Other", "loc": 0, "size_kb": 6.63, "type": "Asset"}, {"name": "tru-estimate-main.webp", "path": "assets/images/uae/tru-estimate-main.webp", "module": "Common/Other", "loc": 0, "size_kb": 9.63, "type": "Asset"}, {"name": "trubroker-badge-large.svg", "path": "assets/images/uae/trubroker-badge-large.svg", "module": "Common/Other", "loc": 0, "size_kb": 6.56, "type": "Asset"}]}};
-        // EMBEDDED DATA END
-        
-        const data = rawData.data;
-        const stats = rawData.stats;
+        const data = {
+            components: [
+                { path: "components/atoms/Icon.tsx", loc: 82 },
+                { path: "components/atoms/Link.tsx", loc: 19 },
+                { path: "components/organisms/ContactDetails.tsx", loc: 69 },
+                { path: "components/organisms/CreditsUsageSummaryBottomSheet.tsx", loc: 77 },
+                { path: "components/organisms/PhoneCallTypesList.tsx", loc: 30 },
+                { path: "components/skeletons/AdProductFilterSkeleton.tsx", loc: 33 },
+                { path: "components/skeletons/CreditWalletsSkeleton.tsx", loc: 17 },
+                { path: "components/skeletons/DevConnectCardSkeleton.tsx", loc: 62 },
+                { path: "components/skeletons/ProfileSkeleton.tsx", loc: 113 },
+                { path: "components/skeletons/TruEstimateSkeleton.tsx", loc: 41 }
+            ],
+            templates: [
+                { path: "components/templates/Generic/Filters/Beds.tsx", loc: 27 },
+                { path: "components/templates/Generic/Filters/RentFrequency.tsx", loc: 38 },
+                { path: "components/templates/ProConnect/MyPostsHeader.tsx", loc: 35 },
+                { path: "components/templates/Properties/Checked/Camera.tsx", loc: 36 },
+                { path: "components/templates/Properties/Trucheck/Camera.tsx", loc: 275 },
+                { path: "components/templates/Properties/UnitPlan/Scan.tsx", loc: 23 },
+                { path: "components/templates/Properties/UnitPlan/View.tsx", loc: 193 },
+                { path: "components/templates/Properties/UnitPlan/ViewDraft.tsx", loc: 205 },
+                { path: "components/templates/Stories/ProjectWebView.tsx", loc: 18 },
+                { path: "components/templates/Transactions/TransactionHeader.tsx", loc: 10 }
+            ],
+            hooks: [
+                { path: "hooks/Chat/conversation/useChatConversationIDs.ts", loc: 7 },
+                { path: "hooks/Chat/useFetchChatAccount.ts", loc: 12 },
+                { path: "hooks/Humbucker/useValidateHCaptcha.ts", loc: 9 },
+                { path: "hooks/Humbucker/useValidateJSChallenge.ts", loc: 9 },
+                { path: "hooks/InsightsTransactions/useInsightTransactions.ts", loc: 27 },
+                { path: "hooks/InsightsTransactions/useTransactionType.ts", loc: 13 },
+                { path: "hooks/Listings/useIsListingAutoTruChecked.ts", loc: 17 },
+                { path: "hooks/Listings/useSelectedPropertyType.ts", loc: 19 },
+                { path: "hooks/Stories/useFetchStory.ts", loc: 14 },
+                { path: "hooks/useAgencies.ts", loc: 14 },
+                { path: "hooks/useIsAgencyExternal.ts", loc: 11 },
+                { path: "hooks/useSwipeGesture.ts", loc: 44 }
+            ],
+            helpers: [
+                { path: "utils/helpers/Currency.ts", loc: 2, items: ["currencyBasedOnPortalType (2 LOC)"] },
+                { path: "utils/helpers/DevConnect.ts", loc: 40, items: ["getDefaultCalendarId (28 LOC)", "getProjectRepresentative (2 LOC)", "getCategoryOrder (10 LOC)"] },
+                { path: "utils/helpers/Filter.ts", loc: 54, items: ["inactiveStates (9 LOC)", "inactivePermitStates (9 LOC)", "listData (5 LOC)", "expiryFilterMapping (10 LOC)", "resetPropertyValues (21 LOC)"] },
+                { path: "utils/helpers/Generic.ts", loc: 31, items: ["roundOffValue (3 LOC)", "openStoreWithSpecificApplication (11 LOC)", "copySecureStoreToAsyncStore (17 LOC)"] },
+                { path: "utils/helpers/Listing.ts", loc: 19, items: ["getListingCompletionStatus (14 LOC)", "roundToNext15Minutes (5 LOC)"] },
+                { path: "utils/helpers/Login.ts", loc: 29, items: ["loginScreensHeight (29 LOC)"] },
+                { path: "utils/helpers/MessageCenter.ts", loc: 35, items: ["getMessageFromSendBirdMessage (35 LOC)"] },
+                { path: "utils/helpers/Overview.ts", loc: 155, items: ["getOnboardingContent (6 LOC)", "onboardingIcons (1 LOC)", "getPurposeFilterParams (21 LOC)", "getValidationFilterParams (9 LOC)", "fetchTopLocationsByListings (90 LOC)", "transformBreadcrumb (28 LOC)"] },
+                { path: "utils/helpers/Stories.ts", loc: 134, items: ["getLocalStoryData (5 LOC)", "saveLocalStoryData (26 LOC)", "scale (5 LOC)", "moderateVerticalScale (9 LOC)", "Metrics (18 LOC)", "compressStoryMedia (34 LOC)", "convertImageToVideo (23 LOC)", "downloadRemoteMediaToCache (14 LOC)"] },
+                { path: "utils/helpers/TruBroker.ts", loc: 5, items: ["truBrokerBuyPurposeOnlyTypes (1 LOC)", "truBrokerOtherPurposesOnlyTypes (4 LOC)"] }
+            ],
+            types: [
+                { path: "types/AdProduct.ts", loc: 35, items: ["ModifiedAdProduct (1 LOC)", "CurrencyAdProductsType (15 LOC)", "AdProductsType (9 LOC)", "AdProductBottomSheets (10 LOC)"] },
+                { path: "types/Agent.ts", loc: 19, items: ["ProfileStatuses (6 LOC)", "externalAgency (4 LOC)", "FetchUsersFilters (9 LOC)"] },
+                { path: "types/BookingCalendar.ts", loc: 5, items: ["Calendar (5 LOC)"] },
+                { path: "types/CreditWallet.ts", loc: 18, items: ["EditWalletFormValues (5 LOC)", "EditWalletDrawerData (4 LOC)", "EditWalletApiMappedCurrencyObject (9 LOC)"] },
+                { path: "types/Currency.ts", loc: 55, items: ["CurrencyAggregatesResponseBody (6 LOC)", "CreditConsumptionFilters (17 LOC)", "useCreditConsumptionProps (10 LOC)", "CreditsConsumptionLogResponse (5 LOC)", "CreditAggregatesByPortalType (9 LOC)", "orionNestedFiltersType (4 LOC)", "CreditTypes (4 LOC)"] },
+                { path: "types/Generic.ts", loc: 1, items: ["ReactQueryLoadingStates (1 LOC)"] },
+                { path: "types/Lead.ts", loc: 8, items: ["LeadsBreakdownES (8 LOC)"] },
+                { path: "types/Listing.ts", loc: 75, items: ["TruCheckAccepted (1 LOC)", "TruCheckPending (1 LOC)", "ValidityError (4 LOC)", "ListingItem (4 LOC)", "UsedAdProductsEntity (8 LOC)", "PermitNumberResponseBody (6 LOC)", "TitleSlug (4 LOC)", "Breadcrumb (4 LOC)", "ListingsBreakdownResponseBody (3 LOC)", "ListingsProps (4 LOC)", "ListingPerformanceByDayES (8 LOC)", "ListingPerformanceByLocationResponseBody (3 LOC)", "ListingPerformanceByDayResponseBody (3 LOC)", "Actions (17 LOC)", "PermitNumberStatus (2 LOC)", "ListingActionClickHandler (1 LOC)", "RenderActionsType (1 LOC)", "TabsType (1 LOC)"] },
+                { path: "types/ListingConstants.ts", loc: 4, items: ["ExpiryRenewalFilterOption (4 LOC)"] },
+                { path: "types/LocalityLevels.ts", loc: 1, items: ["LocalityLevels (1 LOC)"] },
+                { path: "types/Message.ts", loc: 12, items: ["ChatState (8 LOC)", "ConversationContactDetailsVisibility (4 LOC)"] },
+                { path: "types/Permission.ts", loc: 3, items: ["PermissionsResponseBody (3 LOC)"] },
+                { path: "types/Portal.ts", loc: 16, items: ["PortalsType (1 LOC)", "TogglePortalResponse (4 LOC)", "PageFilterType (6 LOC)", "PortalResponseBody (5 LOC)"] },
+                { path: "types/Post.ts", loc: 5, items: ["MappedPostDeletionReasonsResponseBody (5 LOC)"] },
+                { path: "types/Products.ts", loc: 4, items: ["ListingProductType (4 LOC)"] },
+                { path: "types/Quota.ts", loc: 37, items: ["QuotaStatsType (20 LOC)", "BasicFlagsFlags (1 LOC)", "DeveloperFlags (1 LOC)", "QuotaTabelDataInterface (12 LOC)", "IndividualQuotaObjectInterface (3 LOC)"] },
+                { path: "types/Service.ts", loc: 3, items: ["ServiceMeta (3 LOC)"] },
+                { path: "types/Stats.ts", loc: 30, items: ["StatsCountAggregate (7 LOC)", "ByCategoryKey (5 LOC)", "StatsBreakdownByLocation (7 LOC)", "StatsBreakdownByListingType (3 LOC)", "StatsCountResponseBody (1 LOC)", "StatsTrend (7 LOC)"] },
+                { path: "types/Team.ts", loc: 14, items: ["TeamTableData (8 LOC)", "PostTeam (3 LOC)", "AddTeamFieldValue (3 LOC)"] },
+                { path: "types/TopLocations.ts", loc: 13, items: ["TopLocationGraphData (6 LOC)", "TopLocationsTabsValues (7 LOC)"] },
+                { path: "types/Transaction.ts", loc: 22, items: ["DldTransactionProperty (12 LOC)", "DldTransactionApiResponseBody (4 LOC)", "NotesForm (3 LOC)", "RecentTransactions (3 LOC)"] },
+                { path: "types/User.ts", loc: 41, items: ["UserRoleType (5 LOC)", "UsersTableRecord (18 LOC)", "GroupUsersfilters (4 LOC)", "ColumnType (7 LOC)"] }
+            ],
+            assets: [
+                { path: "assets/images/common/adaptive-icon-background.png", size: "250.02 KB" },
+                { path: "assets/images/common/area-icon.svg", size: "0.5 KB" },
+                { path: "assets/images/common/favicon.webp", size: "1.48 KB" },
+                { path: "assets/images/common/no-image-available.webp", size: "25.09 KB" },
+                { path: "assets/images/common/splash-android.png", size: "9.58 KB" },
+                { path: "assets/images/egy/adaptive-icon-foreground.png", size: "19.99 KB" },
+                { path: "assets/images/egy/profolio-mobile.png", size: "396.47 KB" },
+                { path: "assets/images/uae/adaptive-icon-foreground.png", size: "10.77 KB" },
+                { path: "assets/images/uae/devconnect-overview-bg.webp", size: "2.96 KB" },
+                { path: "assets/images/uae/tru-estimate-main.webp", size: "9.63 KB" }
+            ]
+        };
 
-        // Initialize Stats
-        document.getElementById('totalItems').textContent = stats.total_items;
-        document.getElementById('totalLoc').textContent = stats.total_loc_saved;
-        document.getElementById('totalModules').textContent = Object.keys(stats.by_module).length;
+        function renderItems(containerId, items, showSubItems = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = items.map(item => {
+                const subItemsHtml = showSubItems && item.items ?
+                    `<div class="sub-items">${item.items.map(sub => `<div class="sub-item">• ${sub}</div>`).join('')}</div>` : '';
 
-        // 1. Doughnut Chart (Category)
-        const ctxCategory = document.getElementById('categoryChart').getContext('2d');
-        new Chart(ctxCategory, {
-            type: 'doughnut',
-            data: {
-                labels: ['Components', 'Helpers', 'Hooks', 'Types', 'Assets'],
-                datasets: [{
-                    data: [
-                        data.components.length,
-                        data.helpers.length,
-                        data.hooks.length,
-                        data.types.length,
-                        data.assets.length
-                    ],
-                    backgroundColor: ['#3b82f6', '#22c55e', '#a855f7', '#f97316', '#ef4444']
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-
-        // 2. Bar Chart (Modules)
-        const allModules = Object.entries(stats.by_module);
-        const ctxModule = document.getElementById('moduleChart').getContext('2d');
-        new Chart(ctxModule, {
-            type: 'bar',
-            data: {
-                labels: allModules.map(x => x[0]),
-                datasets: [{
-                    label: 'Unused Items',
-                    data: allModules.map(x => x[1]),
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 4
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: { legend: { display: false } }
-            }
-        });
-
-        // 3. Radar Chart (Module Profile - Top 5)
-        const top5Modules = allModules.slice(0, 5).map(x => x[0]);
-        const radarDatasets = top5Modules.map((mod, i) => {
-            const breakdown = stats.module_breakdown[mod] || {};
-            const colors = ['rgba(59, 130, 246, 0.5)', 'rgba(34, 197, 94, 0.5)', 'rgba(168, 85, 247, 0.5)', 'rgba(249, 115, 22, 0.5)', 'rgba(239, 68, 68, 0.5)'];
-            return {
-                label: mod,
-                data: [
-                    breakdown['Component'] || 0,
-                    breakdown['Helper Function'] || 0,
-                    breakdown['Hook'] || 0,
-                    breakdown['Type'] || 0,
-                    breakdown['Asset'] || 0
-                ],
-                fill: true,
-                backgroundColor: colors[i % colors.length],
-                borderColor: colors[i % colors.length].replace('0.5', '1'),
-                pointBackgroundColor: colors[i % colors.length].replace('0.5', '1'),
-            };
-        });
-
-        const ctxRadar = document.getElementById('radarChart').getContext('2d');
-        new Chart(ctxRadar, {
-            type: 'radar',
-            data: {
-                labels: ['Components', 'Helpers', 'Hooks', 'Types', 'Assets'],
-                datasets: radarDatasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                elements: { line: { borderWidth: 2 } }
-            }
-        });
-
-        // 4. Scatter Plot (Impact Analysis)
-        const scatterData = Object.keys(stats.by_module).map(mod => ({
-            x: stats.by_module[mod], // Count
-            y: stats.by_module_loc[mod] || 0, // LOC
-            module: mod
-        }));
-
-        const ctxScatter = document.getElementById('scatterChart').getContext('2d');
-        new Chart(ctxScatter, {
-            type: 'scatter',
-            data: {
-                datasets: [{
-                    label: 'Modules',
-                    data: scatterData,
-                    backgroundColor: '#ef4444'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { title: { display: true, text: 'Number of Unused Items' } },
-                    y: { title: { display: true, text: 'Estimated LOC Saved' } }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const point = context.raw;
-                                return point.module + ': ' + point.x + ' items, ' + point.y + ' LOC';
-                            }
-                        }
-                    },
-                    legend: { display: false }
+                let badge = '';
+                if (item.loc) {
+                    badge = `<span class="item-loc">${item.loc} LOC</span>`;
+                } else if (item.size) {
+                    badge = `<span class="item-loc">${item.size}</span>`;
+                } else if (item.count) {
+                    badge = `<span class="item-loc">${item.count} items (${item.loc} LOC)</span>`;
                 }
-            }
-        });
-
-        // Table Logic
-        let currentFilter = 'all';
-        let allItems = [];
-
-        // Flatten data
-        ['components', 'helpers', 'hooks', 'types', 'assets'].forEach(cat => {
-            allItems = allItems.concat(data[cat].map(item => ({...item, category: cat})));
-        });
-
-        function renderTable(items) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = items.map(item => {
-                let badgeClass = 'badge-' + item.category.replace(' ', '').toLowerCase();
-                if (item.category === 'helpers') badgeClass = 'badge-helper';
-                
-                let sizeDisplay = item.loc ? item.loc + ' LOC' : (item.size_kb ? item.size_kb + ' KB' : '-');
 
                 return `
-                    <tr>
-                        <td><span class="badge ${badgeClass}">${item.type}</span></td>
-                        <td style="font-weight: 500;">${item.name}</td>
-                        <td style="font-weight: 600; color: #475569;">${item.module}</td>
-                        <td style="font-family: monospace; font-size: 0.85em; color: #64748b;">${item.path}</td>
-                        <td>${sizeDisplay}</td>
-                        <td>
-                            <button class="copy-btn" onclick="navigator.clipboard.writeText('${item.path}')">Copy</button>
-                        </td>
-                    </tr>
+                    <div class="item-card">
+                        <div class="item-path">${item.path}</div>
+                        ${badge}
+                    </div>
+                    ${subItemsHtml}
                 `;
             }).join('');
         }
 
-        function filterTable(category) {
-            currentFilter = category;
-            
-            // Update tabs
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        renderItems('components-list', data.components);
+        renderItems('templates-list', data.templates);
+        renderItems('hooks-list', data.hooks);
+        renderItems('helpers-list', data.helpers, true);
+        renderItems('types-list', data.types, true);
+        renderItems('assets-list', data.assets);
+
+        const componentLoc = data.components.reduce((sum, item) => sum + item.loc, 0);
+        const templateLoc = data.templates.reduce((sum, item) => sum + item.loc, 0);
+        const hookLoc = data.hooks.reduce((sum, item) => sum + item.loc, 0);
+        const helperLoc = data.helpers.reduce((sum, item) => sum + item.loc, 0);
+        const typeLoc = data.types.reduce((sum, item) => sum + item.loc, 0);
+
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Components', 'Templates', 'Hooks', 'Helpers', 'Types', 'Assets', 'Translations'],
+                datasets: [{
+                    data: [10, 10, 12, 30, 74, 10, 1070],
+                    backgroundColor: [
+                        '#6366f1',
+                        '#8b5cf6',
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#06b6d4',
+                        '#ec4899'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#f1f5f9',
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    }
+                }
+            }
+        });
+
+        const locCtx = document.getElementById('locChart').getContext('2d');
+        new Chart(locCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Components', 'Templates', 'Hooks', 'Helpers', 'Types', 'Translations'],
+                datasets: [{
+                    label: 'Lines of Code',
+                    data: [componentLoc, templateLoc, hookLoc, helperLoc, typeLoc, 1070],
+                    backgroundColor: '#6366f1',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#334155' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        function showSection(section) {
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
             event.target.classList.add('active');
 
-            const filtered = category === 'all' 
-                ? allItems 
-                : allItems.filter(i => i.category === category);
-            
-            renderTable(filtered);
+            const sections = ['components', 'templates', 'hooks', 'helpers', 'types', 'assets', 'translations'];
+
+            if (section === 'all') {
+                sections.forEach(s => {
+                    document.getElementById(`${s}-section`).classList.remove('hidden');
+                });
+            } else {
+                sections.forEach(s => {
+                    if (s === section) {
+                        document.getElementById(`${s}-section`).classList.remove('hidden');
+                    } else {
+                        document.getElementById(`${s}-section`).classList.add('hidden');
+                    }
+                });
+            }
         }
-
-        function searchTable(query) {
-            query = query.toLowerCase();
-            const filtered = allItems.filter(item => {
-                const matchesFilter = currentFilter === 'all' || item.category === currentFilter;
-                const matchesSearch = item.name.toLowerCase().includes(query) || 
-                                    item.path.toLowerCase().includes(query) || 
-                                    item.module.toLowerCase().includes(query);
-                return matchesFilter && matchesSearch;
-            });
-            renderTable(filtered);
-        }
-
-        // Initial render
-        renderTable(allItems);
-
     </script>
 </body>
+
 </html>
